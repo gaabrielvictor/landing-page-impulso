@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/landing-page-impulso/static/css/main.3a3f52cd.css",
+    "main.js": "/landing-page-impulso/static/js/main.756f02b1.js",
+    "static/js/453.f0abe0df.chunk.js": "/landing-page-impulso/static/js/453.f0abe0df.chunk.js",
+    "static/media/benefits.png": "/landing-page-impulso/static/media/benefits.29440cdf4fc26df55b34.png",
+    "static/media/unifacisa.png": "/landing-page-impulso/static/media/unifacisa.95160cb50972dc277fd1.png",
+    "static/media/evaluation.png": "/landing-page-impulso/static/media/evaluation.38d54a6c35a445f82abe.png",
+    "static/media/HowItWorks.png": "/landing-page-impulso/static/media/HowItWorks.a3327b4dbf25d9091592.png",
+    "static/media/logo.png": "/landing-page-impulso/static/media/logo.287a945989719f197bbe.png",
+    "static/media/impulso.png": "/landing-page-impulso/static/media/impulso.e7ebbadfa55164b84a50.png",
+    "static/media/apple.png": "/landing-page-impulso/static/media/apple.38f67a6ccedaf58748d0.png",
+    "static/media/google-play-badge.png": "/landing-page-impulso/static/media/google-play-badge.42aaa19592de36aabad5.png",
+    "index.html": "/landing-page-impulso/index.html",
+    "main.3a3f52cd.css.map": "/landing-page-impulso/static/css/main.3a3f52cd.css.map",
+    "main.756f02b1.js.map": "/landing-page-impulso/static/js/main.756f02b1.js.map",
+    "453.f0abe0df.chunk.js.map": "/landing-page-impulso/static/js/453.f0abe0df.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3a3f52cd.css",
+    "static/js/main.756f02b1.js"
+  ]
+}
