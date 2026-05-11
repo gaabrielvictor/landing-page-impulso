@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700&display=swap');
+
+.login-page {
+  background-color: #06377B;
+  min-height: 100vh;
+  width: 100%;
+  font-family: 'League Spartan', sans-serif;
+}
+
+.login-page .container-forgot {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+}
+
+.login-page .container-form-forgot {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 12%;
+}
+
+.login-page .container-image {
+  width: 50%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.login-page .container-image h1 {
+  margin-bottom: 170px;
+  position: absolute;
+  font-size: 35px;
+  color: white;
+}
+
+.login-page .container-image img {
+  display: block;
+  max-width: 550px;
+  height: auto;
+}
+
+.login-page .header-title,
+.login-page .header-title p,
+.login-page .header-title h1 {
+  color: white;
+}
+
+.login-page .header-title {
+  width: 150%;
+}
+
+.login-page .title-form {
+  font-size: 25px;
+  font-weight: 400;
+  margin-bottom: 2px;
+}
+
+.login-page .underline {
+  display: block;
+  width: 45%;
+  border-bottom: 2px solid white;
+  margin-top: -10px;
+}
+
+.login-page .desc {
+  font-size: 15px;
+  font-weight: 400;
+  margin-top: 1px;
+}
+
+.login-page .input-container {
+  position: relative;
+  width: 100%;
+}
+
+.login-page input {
+  width: 100%;
+  padding: 10px 5px 10px 40px;
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 18px;
+  color: white;
+  background-color: #0f75bc;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.login-page input::placeholder { color: #7ac8ff; }
+.login-page input:hover { opacity: 0.8; }
+
+.login-page .icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #fff;
+  background-color: transparent;
+  margin-top: -5px;
+}
+
+.login-page .toggle-password-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #fff;
+  cursor: pointer;
+  background-color: transparent;
+  margin-top: -5px;
+}
+
+.login-page button {
+  background-color: #0F75BC;
+  color: white;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 10px;
+  width: 40%;
+  border: none;
+  margin-top: 10px;
+  cursor: pointer;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.2s;
+}
+.login-page .btn-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.login-page .btn-container button {
+    width: 48%;
+}
+
+.login-page .btn-registrar {
+    background-color: white;
+    color: #0F75BC;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px;
+    border: 2px solid #0F75BC;
+    cursor: pointer;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.2s;
+}
+
+.login-page .btn-registrar:hover {
+    opacity: 0.8;
+}
+
+.login-page button:hover { opacity: 0.8; }
