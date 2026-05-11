@@ -4,7 +4,7 @@ Plataforma web desenvolvida para o programa **Impulso da Unifacisa**, com landin
 
 ---
 ## 📥 Acesse a nossa Página : 
-[Impulso Unifacisa ]([https://github.com/gaabrielvictor](https://gaabrielvictor.github.io/landing-page-impulso/))
+[Impulso Unifacisa]([https://github.com/gaabrielvictor](https://gaabrielvictor.github.io/landing-page-impulso/)
 
 ## 📋 Índice
 
