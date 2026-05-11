@@ -4,6 +4,8 @@ import impulsoImage from '../assets/logo.png';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import '../styles/Login.css';
 
+
+// CREDENCIAIS DE LOGIN PARA TESTE ENTRANDO APENAS O USUÁRIO ADMIN (FEITO POR VINICIUS)
 const ADMIN_EMAIL = 'admin@unifacisa.com';
 const ADMIN_PASSWORD = 'admin123';
 
@@ -17,7 +19,8 @@ const Login = () => {
     const navigate = useNavigate();
 
     const togglePasswordVisibility = () => setShowPassword(!showPassword);
-
+    //É uma expressão regular (regex) que valida o formato do e-mail, 
+    // garantindo que ele contenha um nome de usuário, seguido por um símbolo "@" e um domínio válido. (FEITA POR GABRIEL (COM AUXILIO DO CLAUDE CODE))
     const validate = () => {
         const errs = {};
         if (!email) errs.email = 'Informe o e-mail';
