@@ -1,70 +1,143 @@
-# Getting Started with Create React App
+# 🚀 Impulso Unifacisa — Landing Page
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Plataforma web desenvolvida para o programa **Impulso da Unifacisa**, com landing page institucional, sistema de login administrativo e recuperação de senha.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 📋 Índice
 
-### `npm start`
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Estrutura de Pastas](#estrutura-de-pastas)
+- [Fluxo da Aplicação](#fluxo-da-aplicação)
+- [Como Rodar o Projeto](#como-rodar-o-projeto)
+- [Credenciais de Acesso](#credenciais-de-acesso)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 📌 Sobre o Projeto
 
-### `npm test`
+Landing page institucional do programa Impulso da Unifacisa, com seções informativas e acesso restrito ao painel administrativo via autenticação de login.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🛠 Tecnologias Utilizadas
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+| Tecnologia | Descrição |
+|---|---|
+| [React](https://reactjs.org/) | Biblioteca principal para construção da interface |
+| [React Router DOM](https://reactrouter.com/) | Gerenciamento de rotas e navegação entre páginas |
+| [CSS3](https://developer.mozilla.org/pt-BR/docs/Web/CSS) | Estilização dos componentes |
+| [Font Awesome](https://fontawesome.com/) | Ícones utilizados nos campos de formulário |
+| [Google Fonts](https://fonts.google.com/) | Fontes League Spartan e Montserrat |
+| [Create React App](https://create-react-app.dev/) | Configuração inicial do projeto |
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📁 Estrutura de Pastas
 
-### `npm run eject`
+```
+src/
+├── assets/              # Imagens e recursos estáticos
+│   └── logo.png
+├── components/          # Componentes reutilizáveis
+│   ├── Header.jsx       # Cabeçalho com botão de acesso
+│   ├── Hero.jsx         # Seção principal da landing page
+│   ├── HowItWorks.jsx   # Seção "Como funciona"
+│   ├── EvaluationCriteria.jsx
+│   ├── Benefits.jsx     # Seção de benefícios
+│   └── Footer.jsx       # Rodapé
+├── pages/               # Páginas da aplicação
+│   ├── Login.jsx        # Página de login administrativo
+│   └── ForgotPassword.jsx # Página de recuperação de senha
+├── styles/              # Arquivos CSS por componente
+│   ├── Header.css
+│   ├── Hero.css
+│   ├── HowItWorks.css
+│   ├── EvaluationCriteria.css
+│   ├── Benefits.css
+│   ├── Footer.css
+│   └── Login.css        # Estilos do login e esqueceu senha
+└── App.js               # Configuração de rotas
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🔄 Fluxo da Aplicação
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```
+Landing Page (/)
+      │
+      │  clica em "Entrar" no Header
+      ▼
+  Login (/login)
+      │
+      ├── credenciais corretas ──► Painel Admin (/admin)
+      │
+      ├── credenciais erradas ──► exibe mensagem de erro
+      │
+      └── clica em "Esqueceu a senha?" ──► Recuperar Senha (/esqueceu-senha)
+                                                    │
+                                                    └── clica em "Enviar" ──► volta para Login (/)
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Detalhes de cada tela
 
-## Learn More
+**🏠 Landing Page `/`**
+Página inicial com todas as seções institucionais do programa Impulso. O botão **Entrar** no cabeçalho redireciona para a tela de login.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+**🔐 Login `/login`**
+Tela de autenticação com:
+- Validação de formato de e-mail
+- Validação de senha com mínimo de 6 caracteres
+- Exibição/ocultação de senha
+- Mensagem de erro para credenciais incorretas
+- Link para recuperação de senha
+- Botão de registro
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**📧 Esqueceu a Senha `/esqueceu-senha`**
+Tela para recuperação de acesso. O usuário informa o e-mail acadêmico e ao clicar em **Enviar** é redirecionado de volta para a tela de login.
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## ▶️ Como Rodar o Projeto
 
-### Analyzing the Bundle Size
+### Pré-requisitos
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- [Node.js](https://nodejs.org/) instalado
+- [npm](https://www.npmjs.com/) ou [yarn](https://yarnpkg.com/)
 
-### Making a Progressive Web App
+### Passo a passo
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```bash
+# 1. Clone o repositório
+git clone https://github.com/gaabrielvictor/landing-page-impulso.git
 
-### Advanced Configuration
+# 2. Entre na pasta do projeto
+cd landing-page-impulso
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+# 3. Instale as dependências
+npm install
 
-### Deployment
+# 4. Rode o projeto
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Acesse em: `http://localhost:3000/landing-page-impulso`
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🔑 Credenciais de Acesso
+
+> ⚠️ Credenciais apenas para fins de demonstração. Em produção, substitua por autenticação via API.
+
+| Campo | Valor |
+|---|---|
+| E-mail | `admin@unifacisa.com` |
+| Senha | `admin123` |
+
+---
+
+## 👨‍💻 Autor
+
+Desenvolvido por [Gabriel Victor](https://github.com/gaabrielvictor)
