@@ -140,4 +140,4 @@ Acesse em: `http://localhost:3000/landing-page-impulso`
 
 ## 👨‍💻 Autor
 
-Desenvolvido por [Gabriel Victor](https://github.com/gaabrielvictor)
+Desenvolvido por [Grupo Impulso](https://github.com/gaabrielvictor)
