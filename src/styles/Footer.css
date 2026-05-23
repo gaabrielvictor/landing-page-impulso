@@ -1,145 +1,133 @@
 .footer {
-    display: flex;
-    flex-direction: column;
-    padding: 40px 80px;
-    background-color: #768A9D;
-    color: #ffffff;
-    width: 100%;  
-    box-sizing: border-box;
+  display: grid;
+  gap: 2.5rem;
+  padding: 64px 32px;
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 117, 188, 0.08),
+    rgba(255, 255, 255, 0.9)
+  );
+  color: var(--text-1);
 }
 
 .footer-images-section {
-    display: flex;
-    align-items: center;
-    justify-content: space-between; 
-    width: 100%;
-    margin-bottom: 40px; 
-    gap: 850px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .image-container {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .left-image img,
 .right-image img {
-    max-width: 55%; 
-    height: auto;
-    border-radius: 10px;
+  max-width: 55%;
+  height: auto;
+  border-radius: 18px;
 }
 
-.underline {
-    display: block;
-    width: 90%; 
-    border-bottom: 1px solid white;
-    margin-top: -40px; 
-    margin-left: auto;
-    margin-right: auto; 
+.footer .content {
+  flex: 2;
+  text-align: center;
+  padding: 0 20px;
+  width: 100%;
 }
 
-.content {
-    flex: 2;
-    text-align: center;
-    padding: 0 20px;
-    width: 90%; 
-    margin-left: auto;
-    margin-right: auto;
+.footer .content h2 {
+  font-family: "League Spartan", sans-serif;
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 1rem;
 }
 
-.content h2 {
-    font-family: 'League Spartan', sans-serif;
-    font-size: 2rem;
-    font-weight: bold;
-    color: #ffffff;
-    margin-bottom: 20px;
-}
-
-.content p {
-    font-family: 'League Spartan', sans-serif;
-    font-size: 1rem;
-    color: #ffffff;
-    line-height: 1.5;
+.footer .content p {
+  font-family: "League Spartan", sans-serif;
+  font-size: 1rem;
+  color: var(--text-2);
+  line-height: 1.8;
 }
 
 .footer-columns {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    margin-top: 20px;
-    width: 90%; 
-    margin-left: auto;
-    margin-right: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 .footer-column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .footer-column h4 {
-    margin-bottom: 10px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #ffffff;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-1);
 }
 
 .footer-column p {
-    font-size: 0.9rem;
-    color: #eaeaea;
+  font-size: 0.95rem;
+  color: var(--text-2);
 }
 
 .social-icons {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 .social-icons svg {
-    font-size: 1.2rem;
-    color: #ffffff;
-    cursor: pointer;
-    transition: color 0.3s;
+  font-size: 1.2rem;
+  color: var(--text-1);
+  cursor: pointer;
+  transition: color 0.3s ease;
 }
 
 .social-icons svg:hover {
-    color: #0f75bc;
+  color: var(--accent);
 }
 
 .partner-images {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .partner-images img {
-    max-width: 120px;
-    height: auto;
+  max-width: 120px;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .footer-bottom {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 0.875rem;
-    color: #d1d7dd;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--text-3);
 }
 
 a {
-    cursor: pointer !important;
-    transition: color 0.3s;
+  cursor: pointer !important;
+  transition: color 0.3s ease;
 }
 
 a:hover {
-    color: #0f75bc;
+  color: var(--accent);
 }
 
-.underline2 {
-    width: 90%;
-    border-bottom: 1px solid white;
-    margin-top: 50px;
-    margin-left: auto;
-    margin-right: auto;
+@media (max-width: 900px) {
+  .footer-images-section,
+  .footer-columns {
+    grid-template-columns: 1fr;
+  }
 }

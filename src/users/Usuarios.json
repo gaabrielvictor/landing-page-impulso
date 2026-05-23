@@ -1,0 +1,24 @@
+{
+  "usuarios": [
+    {
+      "id": "seed-admin-1",
+      "name": "Administrador",
+      "birthDate": "1990-01-01",
+      "sexo": "prefiro_nao_informar",
+      "curso": "Unifacisa",
+      "email": "admin@unifacisa.com",
+      "password": "admin123",
+      "role": "admin"
+    },
+    {
+      "id": "seed-aluno-1",
+      "name": "Aluno Demonstração",
+      "birthDate": "2002-06-15",
+      "sexo": "prefiro_nao_informar",
+      "curso": "Centro de Ensino Superior e Desenvolvimento — Unifacisa",
+      "email": "aluno@unifacisa.com",
+      "password": "aluno123",
+      "role": "aluno"
+    }
+  ]
+}

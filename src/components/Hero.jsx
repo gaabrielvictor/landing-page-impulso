@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Hero.css';
 import heroImage from '../assets/impulso.png';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section id="hero" className="hero">
       <div className="hero-content">
@@ -16,8 +19,16 @@ const Hero = () => {
           ser reconhecido pelo seu verdadeiro valor.
         </p>
         <div className="hero-buttons">
-          <button className="hero-btn">Submeter seu projeto!</button>
-          <button className="hero-button">Saiba Mais</button>
+          <button type="button" className="hero-btn" onClick={() => navigate('/login')}>
+            Submeter seu projeto!
+          </button>
+          <button
+            type="button"
+            className="hero-button"
+            onClick={() => navigate('/como-funciona')}
+          >
+            Saiba Mais
+          </button>
         </div>
       </div>
       <div className="hero-image">

@@ -8,6 +8,10 @@ import Benefits from './components/Benefits';
 import Footer from './components/Footer';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
+import Register from './pages/Register';
+import ProfessorPanel from './pages/ProfessorPanel';
+import AlunoPanel from './pages/AlunoPanel';
+import ComoFunciona from './pages/ComoFunciona';
 import './App.css';
 
 function HomePage() {
@@ -31,7 +35,11 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/registrar" element={<Register />} />
         <Route path="/esqueceu-senha" element={<ForgotPassword />} />
+        <Route path="/admin" element={<ProfessorPanel />} />
+        <Route path="/aluno" element={<AlunoPanel />} />
+        <Route path="/como-funciona" element={<ComoFunciona />} />
       </Routes>
     </BrowserRouter>
   );

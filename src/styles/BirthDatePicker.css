@@ -1,0 +1,336 @@
+/* Campo (fica dentro de .login-page) */
+.login-page .bdp {
+  position: relative;
+  width: 100%;
+}
+
+.login-page .bdp-field {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.login-page .bdp-field .bdp-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  margin-bottom: 0;
+  width: auto;
+  padding: 10px 8px 10px 40px;
+  border: none;
+  border-radius: 0;
+  font-size: 18px;
+  font-family: "League Spartan", sans-serif;
+  color: #fff;
+  background-color: #0f75bc;
+  box-sizing: border-box;
+  transition: opacity 0.2s;
+}
+
+.login-page .bdp-input::placeholder {
+  color: #7ac8ff;
+}
+
+.login-page .bdp-input:hover {
+  opacity: 0.92;
+}
+
+.login-page .bdp-input:focus {
+  outline: none;
+}
+
+.login-page .bdp-field:focus-within {
+  outline: 2px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 2px;
+}
+
+.login-page .bdp-calendar-btn {
+  flex-shrink: 0;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+  background-color: #0c68a8;
+  color: #fff;
+  font-size: 17px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
+}
+
+.login-page .bdp-calendar-btn:hover {
+  background-color: #0f75bc;
+}
+
+.login-page .bdp-calendar-btn:focus-visible {
+  outline: none;
+  background-color: #1188d4;
+}
+
+.login-page .bdp--open .bdp-calendar-btn {
+  background-color: #06377b;
+}
+
+/* Modal + roletas (portal em document.body — sem prefixo .login-page) */
+.bdp-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 10000;
+  animation: bdp-fade-in 0.3s ease;
+  font-family: "League Spartan", sans-serif;
+}
+
+.bdp-modal.active {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+@keyframes bdp-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bdp-picker-container {
+  background: linear-gradient(165deg, #0a4a8f 0%, #06377b 42%, #052a5e 100%);
+  border-radius: 20px;
+  padding: 28px 26px 26px;
+  max-width: 500px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(15, 117, 188, 0.35);
+  animation: bdp-slide-up 0.3s ease;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+@keyframes bdp-slide-up {
+  from {
+    transform: translateY(36px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.bdp-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  gap: 12px;
+}
+
+.bdp-picker-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.bdp-close-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  transition:
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+
+.bdp-close-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: rotate(90deg);
+}
+
+.bdp-selected-date {
+  text-align: center;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  background: rgba(15, 117, 188, 0.35);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Mesma estrutura do demo: overlay + 3 colunas (dia | mês | ano) */
+.bdp-wheel-picker {
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(6, 55, 123, 0.45);
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.bdp-wheel-column {
+  flex: 1;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bdp-wheel-column::-webkit-scrollbar {
+  display: none;
+}
+
+.bdp-wheel-pad {
+  flex-shrink: 0;
+}
+
+.bdp-wheel-item {
+  height: 40px;
+  min-height: 40px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-family: "League Spartan", sans-serif;
+  color: rgba(255, 255, 255, 0.55);
+  scroll-snap-align: center;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    font-size 0.2s ease;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.bdp-wheel-item:hover {
+  color: #7ac8ff;
+}
+
+.bdp-wheel-item.selected {
+  color: #fff;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.bdp-wheel-overlay {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 40px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bdp-wheel-overlay::before,
+.bdp-wheel-overlay::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #7ac8ff;
+  opacity: 0.45;
+}
+
+.bdp-wheel-overlay::before {
+  top: 0;
+}
+
+.bdp-wheel-overlay::after {
+  bottom: 0;
+}
+
+.bdp-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.bdp-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: "League Spartan", sans-serif;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.bdp-btn-cancel {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.bdp-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.bdp-btn-confirm {
+  background: linear-gradient(135deg, #0f75bc 0%, #06377b 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.bdp-btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 117, 188, 0.45);
+}
+
+@media (max-width: 480px) {
+  .bdp-picker-container {
+    padding: 22px 16px 20px;
+  }
+
+  .bdp-wheel-picker {
+    gap: 8px;
+    padding: 0 4px;
+  }
+
+  .bdp-wheel-item {
+    font-size: 14px;
+  }
+
+  .bdp-wheel-item.selected {
+    font-size: 15px;
+  }
+}

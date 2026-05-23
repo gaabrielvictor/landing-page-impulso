@@ -1,0 +1,12 @@
+.como-funciona-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.como-funciona-page .como-funciona-main {
+  flex: 1;
+  padding-top: 32px;
+  padding-bottom: 48px;
+}
