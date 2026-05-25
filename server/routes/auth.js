@@ -16,8 +16,16 @@ const generateUserId = () => {
  */
 router.post("/register", async (req, res) => {
   try {
-    const { name, birthDate, sexo, instituicao, email, password, role } =
-      req.body;
+    const {
+      name,
+      birthDate,
+      sexo,
+      instituicao,
+      email,
+      password,
+      role,
+      matricula,
+    } = req.body;
 
     // Validação básica
     if (
@@ -33,6 +41,15 @@ router.post("/register", async (req, res) => {
         ok: false,
         error: "Todos os campos são obrigatórios.",
       });
+    }
+
+    if (role === "aluno") {
+      if (!matricula || !/^\d{10}$/.test(String(matricula).trim())) {
+        return res.status(400).json({
+          ok: false,
+          error: "A matrícula deve ter exatamente 10 dígitos.",
+        });
+      }
     }
 
     // Validação de email
@@ -73,6 +90,7 @@ router.post("/register", async (req, res) => {
       email: email.trim().toLowerCase(),
       password,
       role: ["aluno", "professor"].includes(role) ? role : "aluno",
+      matricula: role === "aluno" ? String(matricula).trim() : undefined,
     });
 
     await newUser.save();

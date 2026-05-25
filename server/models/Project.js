@@ -77,6 +77,14 @@ const projectSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    professorFeedback: {
+      type: String,
+      default: "",
+    },
+    professorFeedbackEm: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );

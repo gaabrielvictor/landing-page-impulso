@@ -55,11 +55,13 @@
 .aluno-topbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .aluno-topbar-actions a {
-  color: #b8d9ff;
+  color: #0f75bc;
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
@@ -71,8 +73,184 @@
 }
 
 .aluno-topbar-actions a:hover {
+  color: #06377b;
+  background: rgba(15, 117, 188, 0.08);
+}
+
+/* Perfil no header (canto superior direito) */
+.aluno-topbar-profile {
+  position: relative;
+}
+
+.aluno-topbar-profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid #d8e4f2;
+  border-radius: 999px;
+  background: #f8fbff;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.aluno-topbar-profile-trigger:hover,
+.aluno-topbar-profile-trigger[aria-expanded="true"] {
+  border-color: #0f75bc;
+  box-shadow: 0 4px 12px rgba(15, 117, 188, 0.12);
+}
+
+.aluno-topbar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #0f75bc, #06377b);
   color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.aluno-topbar-avatar--lg {
+  width: 44px;
+  height: 44px;
+  font-size: 0.95rem;
+}
+
+.aluno-topbar-profile-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.aluno-topbar-profile-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7c90;
+}
+
+.aluno-topbar-profile-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #06377b;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aluno-topbar-profile-chevron {
+  font-size: 0.7rem;
+  color: #6b7c90;
+  transition: transform 0.2s;
+}
+
+.aluno-topbar-profile-chevron--open {
+  transform: rotate(180deg);
+}
+
+.aluno-topbar-profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 280px;
+  background: #fff;
+  border: 1px solid #e2eaf4;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(6, 55, 123, 0.15);
+  padding: 16px;
+  animation: aluno-tab-fade 0.15s ease;
+}
+
+.aluno-topbar-profile-menu-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e8eef5;
+}
+
+.aluno-topbar-profile-menu-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #06377b;
+}
+
+.aluno-topbar-profile-menu-role {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #0f75bc;
+  font-weight: 600;
+}
+
+.aluno-topbar-profile-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aluno-topbar-profile-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  border-bottom: 1px solid #f0f4f8;
+}
+
+.aluno-topbar-profile-list li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.aluno-topbar-profile-list i {
+  color: #0f75bc;
+  margin-top: 3px;
+  min-width: 16px;
+}
+
+.aluno-topbar-profile-list strong {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7c90;
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .aluno-topbar-profile-text {
+    display: none;
+  }
+
+  .aluno-topbar-profile-trigger {
+    padding: 4px;
+    border-radius: 50%;
+  }
+
+  .aluno-topbar-profile-chevron {
+    display: none;
+  }
+
+  .aluno-topbar-profile-menu {
+    right: -8px;
+    min-width: 260px;
+  }
 }
 
 .aluno-btn-logout {
@@ -114,6 +292,82 @@
   color: #4a5f75;
   max-width: 640px;
   line-height: 1.45;
+}
+
+/* Abas de navegação do painel */
+.aluno-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e2eaf4;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.aluno-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #5a6b7d;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.aluno-tab:hover {
+  color: #06377b;
+}
+
+.aluno-tab--active {
+  color: #06377b;
+  border-bottom-color: #0f75bc;
+}
+
+.aluno-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #0f75bc;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.aluno-tab-panel {
+  animation: aluno-tab-fade 0.2s ease;
+}
+
+@keyframes aluno-tab-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aluno-card--tab {
+  max-width: 560px;
+}
+
+.aluno-card--full {
+  max-width: none;
 }
 
 .aluno-grid {
@@ -274,6 +528,91 @@
 .aluno-project-meta {
   font-size: 0.82rem;
   color: #5a6b7d;
+}
+
+.aluno-feedback-block {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  border: 1px solid #dce8f5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aluno-feedback-block-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #06377b;
+}
+
+.aluno-feedback-block-message,
+.aluno-feedback-block-empty {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+.aluno-feedback-block-empty {
+  color: #5a6b7d;
+}
+
+.aluno-feedback-block-date {
+  font-size: 0.8rem;
+  color: #5a6b7d;
+}
+
+.aluno-project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.aluno-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 0;
+  color: #5a6b7d;
+  font-size: 0.95rem;
+}
+
+.aluno-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #5a6b7d;
+}
+
+.aluno-empty i {
+  font-size: 2.5rem;
+  color: #b8d0e8;
+  margin-bottom: 12px;
+}
+
+.aluno-empty p {
+  margin: 0 0 16px;
+}
+
+.aluno-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  color: #0f75bc;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.aluno-link-btn:hover {
+  color: #06377b;
 }
 
 .aluno-badge {
@@ -623,6 +962,34 @@
   opacity: 0.94;
 }
 
+.aluno-btn--danger {
+  background: #fff0f0;
+  color: #c0392b;
+  border: 2px solid #f5c6c6;
+}
+
+.aluno-btn--danger:hover {
+  background: #fde8e8;
+  border-color: #e8a0a0;
+}
+
+.aluno-btn--sm {
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  border-radius: 8px;
+}
+
+.aluno-btn--sm i {
+  margin-right: 4px;
+}
+
+.aluno-pdf-iframe {
+  width: 100%;
+  height: 80vh;
+  border: none;
+  display: block;
+}
+
 @media (max-width: 600px) {
   .aluno-drawer-tab {
     top: auto;
@@ -639,4 +1006,109 @@
   .aluno-drawer-tab-text {
     font-size: 0.72rem;
   }
+}
+
+/* Modal genérico (edição/visualização) */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 25, 40, 0.55);
+  z-index: 120;
+}
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  width: min(920px, 96%);
+  max-width: 920px;
+  box-shadow: 0 20px 60px rgba(6, 55, 123, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.modal--large {
+  width: min(1200px, 98%);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eef3f9;
+}
+.modal-body {
+  padding: 18px 20px;
+}
+.modal-body--full {
+  padding: 0;
+}
+.modal-footer {
+  padding: 12px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #eef3f9;
+}
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .modal {
+    width: 96%;
+  }
+  .modal--large {
+    width: 98%;
+  }
+  .aluno-pdf-iframe,
+  .modal-body iframe {
+    height: 60vh;
+  }
+
+  .aluno-project-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.aluno-status-update {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e8eef5;
+}
+
+.aluno-status-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7c90;
+}
+
+.aluno-status-select {
+  min-width: 200px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #d8e4f2;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #1a2b3d;
+  background: #fff;
+}
+
+.aluno-status-select:focus {
+  outline: none;
+  border-color: #0f75bc;
+  box-shadow: 0 0 0 3px rgba(15, 117, 188, 0.2);
 }

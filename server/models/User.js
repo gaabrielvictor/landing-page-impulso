@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
       enum: ["aluno", "professor", "admin"],
       default: "aluno",
     },
+    matricula: {
+      type: String,
+      default: null,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

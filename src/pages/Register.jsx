@@ -15,6 +15,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [matricula, setMatricula] = useState("");
   /** @type {'' | 'aluno' | 'professor'} */
   const [tipoCadastro, setTipoCadastro] = useState("");
   const [errors, setErrors] = useState({});
@@ -22,6 +23,18 @@ const Register = () => {
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
+  const handleTipoCadastroChange = (value) => {
+    setTipoCadastro(value);
+    if (value !== "aluno") {
+      setMatricula("");
+      setErrors((prevErrors) => {
+        const nextErrors = { ...prevErrors };
+        delete nextErrors.matricula;
+        return nextErrors;
+      });
+    }
+  };
 
   const validate = () => {
     const errs = {};
@@ -53,6 +66,15 @@ const Register = () => {
     if (!email) errs.email = "Informe o e-mail";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       errs.email = "E-mail inválido";
+
+    if (tipoCadastro === "aluno") {
+      if (!matricula.trim()) {
+        errs.matricula = "Informe a matrícula";
+      } else if (!/^\d{10}$/.test(matricula.trim())) {
+        errs.matricula = "A matrícula deve ter exatamente 10 dígitos.";
+      }
+    }
+
     if (!password) errs.password = "Informe a senha";
     else if (password.length < 6) errs.password = "Mínimo 6 caracteres";
     if (!confirmPassword) errs.confirmPassword = "Confirme a senha";
@@ -78,6 +100,7 @@ const Register = () => {
       email: email.trim(),
       password,
       role: tipoCadastro,
+      matricula: tipoCadastro === "aluno" ? matricula.trim() : undefined,
     });
     setLoading(false);
     if (!result.ok) {
@@ -131,7 +154,7 @@ const Register = () => {
                       name="tipoCadastro"
                       value="aluno"
                       checked={tipoCadastro === "aluno"}
-                      onChange={() => setTipoCadastro("aluno")}
+                      onChange={() => handleTipoCadastroChange("aluno")}
                     />
                     <span className="register-perfil-option-inner">
                       <span
@@ -155,7 +178,7 @@ const Register = () => {
                       name="tipoCadastro"
                       value="professor"
                       checked={tipoCadastro === "professor"}
-                      onChange={() => setTipoCadastro("professor")}
+                      onChange={() => handleTipoCadastroChange("professor")}
                     />
                     <span className="register-perfil-option-inner">
                       <span
@@ -280,6 +303,35 @@ const Register = () => {
                 </p>
               )}
 
+              {tipoCadastro === "aluno" && (
+                <>
+                  <h1 className="title-form">Número da matrícula</h1>
+                  <div className="input-container">
+                    <i className="fas fa-id-card icon"></i>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="Digite os 10 dígitos"
+                      name="matricula"
+                      autoComplete="off"
+                      aria-label="Número da matrícula"
+                      value={matricula}
+                      onChange={(e) =>
+                        setMatricula(
+                          e.target.value.replace(/\D/g, "").slice(0, 10),
+                        )
+                      }
+                    />
+                  </div>
+                  {errors.matricula && (
+                    <p style={{ color: "red", fontSize: "12px" }}>
+                      {errors.matricula}
+                    </p>
+                  )}
+                </>
+              )}
+
               <h1 className="title-form">E-mail</h1>
               <div className="input-container">
                 <i className="fas fa-envelope icon"></i>
@@ -341,7 +393,11 @@ const Register = () => {
               )}
 
               <a
-                onClick={() => navigate("/login")}
+                href="/login"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/login");
+                }}
                 style={{ cursor: "pointer" }}
               >
                 <p className="desc">Já possui uma conta? Faça login</p>

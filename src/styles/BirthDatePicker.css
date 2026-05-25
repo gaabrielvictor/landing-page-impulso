@@ -23,17 +23,17 @@
   width: auto;
   padding: 10px 8px 10px 40px;
   border: none;
-  border-radius: 0;
+  border-radius: 18;
   font-size: 18px;
   font-family: "League Spartan", sans-serif;
-  color: #fff;
-  background-color: #0f75bc;
+  color: #000000;
+  background-color: #ffffff;
   box-sizing: border-box;
   transition: opacity 0.2s;
 }
 
 .login-page .bdp-input::placeholder {
-  color: #7ac8ff;
+  color: #000000;
 }
 
 .login-page .bdp-input:hover {
