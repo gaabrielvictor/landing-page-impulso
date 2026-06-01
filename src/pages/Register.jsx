@@ -312,7 +312,7 @@ const Register = () => {
                       type="text"
                       inputMode="numeric"
                       maxLength={10}
-                      placeholder="Digite os 10 dígitos"
+                      placeholder="Ex: 1234567890"
                       name="matricula"
                       autoComplete="off"
                       aria-label="Número da matrícula"

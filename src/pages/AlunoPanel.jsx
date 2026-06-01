@@ -8,6 +8,7 @@ import React, {
 import { Navigate, useNavigate, Link } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "../styles/AlunoPanel.css";
+import "../styles/Footer.css";
 import logo from "../assets/logo.png";
 import {
   criarProjetoComPDF,
