@@ -1,3 +1,4 @@
+// AlunoPanel.jsx
 import React, {
   useMemo,
   useState,
@@ -16,6 +17,11 @@ import {
   listarProjetosAluno,
   excluirProjeto,
   getProjetoArquivoUrl,
+  listarProfessores,
+  buscarAvaliacoesProjeto,
+  salvarAvaliadoresProjeto,
+  listarAvaliadoresProjeto,
+  buscarFeedbacksProjeto,
 } from "../utils/projetosApi";
 
 const badgeClass = (key) => {
@@ -33,7 +39,6 @@ const formatDateTime = (value) => {
   if (Number.isNaN(date.getTime())) {
     return "Data indisponível";
   }
-
   return date.toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -73,6 +78,8 @@ const AlunoPanel = () => {
   const [loadError, setLoadError] = useState("");
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novoProfessor, setNovoProfessor] = useState("");
+  const [novaDescricao, setNovaDescricao] = useState("");
+  const [novoCurso, setNovoCurso] = useState("");
   const [pdfNome, setPdfNome] = useState("");
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [projectError, setProjectError] = useState("");
@@ -80,6 +87,8 @@ const AlunoPanel = () => {
   const [editingId, setEditingId] = useState(null);
   const [editTitulo, setEditTitulo] = useState("");
   const [editOrientador, setEditOrientador] = useState("");
+  const [editDescricao, setEditDescricao] = useState("");
+  const [editCurso, setEditCurso] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewUrl, setViewUrl] = useState("");
@@ -88,10 +97,29 @@ const AlunoPanel = () => {
   const [deletingTitulo, setDeletingTitulo] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingStatusId, setIsUpdatingStatusId] = useState(null);
+  
+  // States para seleção de avaliadores
+  const [professoresList, setProfessoresList] = useState([]);
+  const [isLoadingProfessores, setIsLoadingProfessores] = useState(true);
+  const [selectedAvaliadores, setSelectedAvaliadores] = useState({});
+  const [savingAvaliadorId, setSavingAvaliadorId] = useState(null);
+  const [avaliacoesProjetos, setAvaliacoesProjetos] = useState({});
+  const [showAvaliacoesModal, setShowAvaliacoesModal] = useState(false);
+  const [avaliacoesDetalhadas, setAvaliacoesDetalhadas] = useState([]);
+  const [projetoSelecionado, setProjetoSelecionado] = useState(null);
+  
+  // States para feedbacks
+  const [showFeedbacksModal, setShowFeedbacksModal] = useState(false);
+  const [feedbacksList, setFeedbacksList] = useState([]);
+  
+  // States para edição de avaliadores no modal
+  const [editSelectedAvaliadores, setEditSelectedAvaliadores] = useState([]);
 
   const resetFormNovoProjeto = useCallback(() => {
     setNovoTitulo("");
     setNovoProfessor("");
+    setNovaDescricao("");
+    setNovoCurso("");
     setPdfNome("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
@@ -101,22 +129,77 @@ const AlunoPanel = () => {
     resetFormNovoProjeto();
   }, [resetFormNovoProjeto]);
 
+  // Carregar lista de professores
+  const carregarProfessores = useCallback(async () => {
+    setIsLoadingProfessores(true);
+    console.log("🔄 Carregando professores...");
+    const res = await listarProfessores();
+    
+    setIsLoadingProfessores(false);
+    
+    if (res.ok && res.professores) {
+      const professoresFormatados = res.professores.map(prof => ({
+        id: prof.id || prof._id,
+        nome: prof.name || prof.nome,
+        email: prof.email,
+        instituicao: prof.instituicao || prof.curso || "",
+      }));
+      setProfessoresList(professoresFormatados);
+      console.log(`✅ ${professoresFormatados.length} professores carregados`);
+    } else {
+      console.error("❌ Erro ao carregar professores:", res.error);
+    }
+  }, []);
+
+  // Carregar avaliadores de cada projeto
+  const carregarAvaliadoresProjeto = useCallback(async (projetoId) => {
+    const res = await listarAvaliadoresProjeto(projetoId);
+    if (res.ok && res.avaliadores) {
+      setSelectedAvaliadores(prev => ({
+        ...prev,
+        [projetoId]: res.avaliadores.map(a => a.id || a._id)
+      }));
+    }
+  }, []);
+
+  // Carregar avaliações de um projeto
+  const carregarAvaliacoesProjeto = useCallback(async (projetoId) => {
+    const res = await buscarAvaliacoesProjeto(projetoId);
+    if (res.ok && res.avaliacoes) {
+      setAvaliacoesProjetos(prev => ({
+        ...prev,
+        [projetoId]: res.avaliacoes
+      }));
+    }
+  }, []);
+
   const carregarProjetos = useCallback(async () => {
     if (!email) return;
     setIsLoadingProjetos(true);
     setLoadError("");
     const res = await listarProjetosAluno(email);
     setIsLoadingProjetos(false);
+    
     if (!res.ok) {
       setLoadError(res.error || "Erro ao carregar projetos.");
       return;
     }
+    
     setProjetos(res.projetos);
-  }, [email]);
+    
+    // Carregar avaliadores e avaliações para cada projeto
+    if (res.projetos && res.projetos.length > 0) {
+      for (const projeto of res.projetos) {
+        await carregarAvaliadoresProjeto(projeto.id);
+        await carregarAvaliacoesProjeto(projeto.id);
+      }
+    }
+  }, [email, carregarAvaliadoresProjeto, carregarAvaliacoesProjeto]);
 
   useEffect(() => {
     carregarProjetos();
-  }, [carregarProjetos]);
+    carregarProfessores();
+  }, [carregarProjetos, carregarProfessores]);
 
   useEffect(() => {
     if (!profileOpen) return undefined;
@@ -130,7 +213,7 @@ const AlunoPanel = () => {
   }, [profileOpen]);
 
   const modalAberto =
-    drawerOpen || showEditModal || showViewModal || showDeleteModal;
+    drawerOpen || showEditModal || showViewModal || showDeleteModal || showAvaliacoesModal || showFeedbacksModal;
 
   useEffect(() => {
     if (!modalAberto) return undefined;
@@ -147,7 +230,14 @@ const AlunoPanel = () => {
         setEditingId(null);
         setEditTitulo("");
         setEditOrientador("");
+        setEditDescricao("");
+        setEditCurso("");
+        setEditSelectedAvaliadores([]);
         setShowEditModal(false);
+      } else if (showAvaliacoesModal) {
+        setShowAvaliacoesModal(false);
+      } else if (showFeedbacksModal) {
+        setShowFeedbacksModal(false);
       } else if (drawerOpen) {
         fecharDrawer();
       }
@@ -165,6 +255,8 @@ const AlunoPanel = () => {
     showEditModal,
     showViewModal,
     showDeleteModal,
+    showAvaliacoesModal,
+    showFeedbacksModal,
     profileOpen,
     fecharDrawer,
   ]);
@@ -191,6 +283,170 @@ const AlunoPanel = () => {
     const user = email.split("@")[0];
     return user ? user.charAt(0).toUpperCase() + user.slice(1) : "Aluno";
   }, [email, displayName]);
+
+  const calcularMedia = (projetoId) => {
+    const avaliacoes = avaliacoesProjetos[projetoId] || [];
+    if (avaliacoes.length === 0) return null;
+    
+    const soma = avaliacoes.reduce((acc, av) => acc + (av.nota || 0), 0);
+    const media = soma / avaliacoes.length;
+    return media.toFixed(1);
+  };
+
+  const temAvaliacoes = (projetoId) => {
+    const avaliacoes = avaliacoesProjetos[projetoId] || [];
+    return avaliacoes.length > 0;
+  };
+
+  const temFeedbacks = (projeto) => {
+    return projeto.professorFeedback && projeto.professorFeedback.trim() !== "";
+  };
+
+  const verDetalhesAvaliacoes = (projeto) => {
+    const avaliacoes = avaliacoesProjetos[projeto.id] || [];
+    setProjetoSelecionado(projeto);
+    setAvaliacoesDetalhadas(avaliacoes);
+    setShowAvaliacoesModal(true);
+  };
+
+  // Função atualizada para buscar feedbacks com nome dos professores
+  const verDetalhesFeedbacks = async (projeto) => {
+    setProjetoSelecionado(projeto);
+    setShowFeedbacksModal(true);
+    
+    const feedbacks = [];
+    
+    // Adicionar feedback do orientador (se existir)
+    if (projeto.professorFeedback && projeto.professorFeedback.trim() !== "") {
+      feedbacks.push({
+        professor: projeto.professorNome || "Professor Orientador",
+        professorEmail: projeto.professorEmail,
+        feedback: projeto.professorFeedback,
+        data: projeto.professorFeedbackEm,
+        tipo: "orientador",
+        nota: null,
+      });
+    }
+    
+    // Adicionar feedbacks das avaliações
+    const avaliacoes = avaliacoesProjetos[projeto.id] || [];
+    avaliacoes.forEach(av => {
+      if (av.comentario && av.comentario.trim() !== "") {
+        feedbacks.push({
+          professor: av.professorNome || av.professorEmail || "Professor Avaliador",
+          professorEmail: av.professorEmail,
+          feedback: av.comentario,
+          data: av.dataCriacao,
+          tipo: "avaliador",
+          nota: av.nota,
+        });
+      }
+    });
+    
+    // Buscar feedbacks adicionais da API
+    try {
+      const res = await buscarFeedbacksProjeto(projeto.id);
+      if (res.ok && res.feedbacks) {
+        for (const fb of res.feedbacks) {
+          const existe = feedbacks.some(f => 
+            f.feedback === fb.feedback && f.data === fb.data
+          );
+          if (!existe) {
+            feedbacks.push({
+              professor: fb.professorNome || "Professor",
+              professorEmail: fb.professorEmail,
+              feedback: fb.feedback,
+              data: fb.data,
+              tipo: fb.tipo || "feedback",
+              nota: fb.nota,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar feedbacks da API:", error);
+    }
+    
+    // Ordenar por data (mais recente primeiro)
+    feedbacks.sort((a, b) => new Date(b.data) - new Date(a.data));
+    
+    setFeedbacksList(feedbacks);
+  };
+
+  // Função para adicionar avaliador
+  const adicionarAvaliador = async (projetoId, professorId) => {
+    const currentSelected = selectedAvaliadores[projetoId] || [];
+    
+    if (currentSelected.length >= 3) {
+      setProjectError("Você pode selecionar no máximo 3 professores avaliadores por projeto.");
+      setTimeout(() => setProjectError(""), 3000);
+      return;
+    }
+    
+    if (currentSelected.includes(professorId)) {
+      return;
+    }
+    
+    const newSelected = [...currentSelected, professorId];
+    
+    setSelectedAvaliadores(prev => ({
+      ...prev,
+      [projetoId]: newSelected
+    }));
+    
+    setSavingAvaliadorId(projetoId);
+    const res = await salvarAvaliadoresProjeto(projetoId, newSelected);
+    setSavingAvaliadorId(null);
+    
+    if (!res.ok) {
+      setProjectError(res.error || "Erro ao salvar avaliadores.");
+      setSelectedAvaliadores(prev => ({
+        ...prev,
+        [projetoId]: currentSelected
+      }));
+      setTimeout(() => setProjectError(""), 3000);
+    }
+  };
+
+  // Função para remover avaliador
+  const removerAvaliador = async (projetoId, professorId) => {
+    const currentSelected = selectedAvaliadores[projetoId] || [];
+    const newSelected = currentSelected.filter(id => id !== professorId);
+    
+    setSelectedAvaliadores(prev => ({
+      ...prev,
+      [projetoId]: newSelected
+    }));
+    
+    setSavingAvaliadorId(projetoId);
+    const res = await salvarAvaliadoresProjeto(projetoId, newSelected);
+    setSavingAvaliadorId(null);
+    
+    if (!res.ok) {
+      setProjectError(res.error || "Erro ao remover avaliador.");
+      setSelectedAvaliadores(prev => ({
+        ...prev,
+        [projetoId]: currentSelected
+      }));
+      setTimeout(() => setProjectError(""), 3000);
+    }
+  };
+
+  // Função para editar avaliadores no modal
+  const toggleEditAvaliador = (professorId) => {
+    setEditSelectedAvaliadores(prev => {
+      if (prev.includes(professorId)) {
+        return prev.filter(id => id !== professorId);
+      } else {
+        if (prev.length >= 3) {
+          setProjectError("Você pode selecionar no máximo 3 professores avaliadores.");
+          setTimeout(() => setProjectError(""), 3000);
+          return prev;
+        }
+        return [...prev, professorId];
+      }
+    });
+  };
 
   const handlePdfChange = (e) => {
     const f = e.target.files?.[0];
@@ -236,9 +492,10 @@ const AlunoPanel = () => {
     const result = await criarProjetoComPDF({
       alunoEmail: email,
       alunoName: nomeExibicao,
-      curso: instituicao,
+      curso: novoCurso || instituicao,
       titulo,
       orientador,
+      descricao: novaDescricao,
       arquivo,
     });
 
@@ -257,6 +514,9 @@ const AlunoPanel = () => {
     setEditingId(p.id);
     setEditTitulo(p.titulo || "");
     setEditOrientador(p.orientador || "");
+    setEditDescricao(p.descricao || "");
+    setEditCurso(p.curso || "");
+    setEditSelectedAvaliadores([...(selectedAvaliadores[p.id] || [])]);
     setProjectError("");
     setShowEditModal(true);
   };
@@ -265,6 +525,9 @@ const AlunoPanel = () => {
     setEditingId(null);
     setEditTitulo("");
     setEditOrientador("");
+    setEditDescricao("");
+    setEditCurso("");
+    setEditSelectedAvaliadores([]);
     setShowEditModal(false);
     setProjectError("");
   };
@@ -284,6 +547,8 @@ const AlunoPanel = () => {
     const res = await atualizarProjeto(id, {
       titulo: editTitulo.trim(),
       orientador: editOrientador.trim(),
+      curso: editCurso.trim(),
+      descricao: editDescricao.trim(),
       alunoEmail: email,
     });
 
@@ -292,7 +557,19 @@ const AlunoPanel = () => {
       return;
     }
 
+    const avaliadoresRes = await salvarAvaliadoresProjeto(id, editSelectedAvaliadores);
+    
+    if (!avaliadoresRes.ok) {
+      setProjectError(avaliadoresRes.error || "Erro ao salvar avaliadores.");
+      return;
+    }
+
     setProjetos((lista) => lista.map((p) => (p.id === id ? res.projeto : p)));
+    setSelectedAvaliadores(prev => ({
+      ...prev,
+      [id]: editSelectedAvaliadores
+    }));
+    
     cancelEdit();
   };
 
@@ -373,6 +650,131 @@ const AlunoPanel = () => {
     navigate("/login");
   };
 
+  const AvaliacoesModal = () => (
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <div className="modal modal--large">
+        <div className="modal-header">
+          <h3>Avaliações do Projeto</h3>
+          <h4>{projetoSelecionado?.titulo}</h4>
+          <button
+            type="button"
+            className="modal-close"
+            onClick={() => setShowAvaliacoesModal(false)}
+          >
+            ×
+          </button>
+        </div>
+        <div className="modal-body">
+          {avaliacoesDetalhadas.length === 0 ? (
+            <p>Nenhuma avaliação recebida ainda.</p>
+          ) : (
+            <>
+              <div className="avaliacoes-lista">
+                {avaliacoesDetalhadas.map((avaliacao, index) => (
+                  <div key={index} className="avaliacao-card">
+                    <div className="avaliacao-header">
+                      <strong>{avaliacao.professorNome || avaliacao.professorEmail}</strong>
+                      <span className="avaliacao-nota">Nota: {avaliacao.nota}/10</span>
+                    </div>
+                    <div className="avaliacao-comentario">
+                      <p>{avaliacao.comentario}</p>
+                    </div>
+                    <div className="avaliacao-data">
+                      {formatDateTime(avaliacao.dataCriacao)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="avaliacao-media-final">
+                <strong>Média Final: {calcularMedia(projetoSelecionado?.id)}/10</strong>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="aluno-btn aluno-btn--ghost"
+            onClick={() => setShowAvaliacoesModal(false)}
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const FeedbacksModal = () => (
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <div className="modal modal--large">
+        <div className="modal-header">
+          <h3>Feedbacks e Avaliações</h3>
+          <h4>{projetoSelecionado?.titulo}</h4>
+          <button
+            type="button"
+            className="modal-close"
+            onClick={() => setShowFeedbacksModal(false)}
+          >
+            ×
+          </button>
+        </div>
+        <div className="modal-body">
+          {feedbacksList.length === 0 ? (
+            <div className="empty-feedbacks">
+              <i className="fas fa-comment-slash"></i>
+              <p>Nenhum feedback ou avaliação recebida ainda.</p>
+              <small>Quando um professor enviar feedback, aparecerá aqui.</small>
+            </div>
+          ) : (
+            <div className="feedbacks-lista">
+              {feedbacksList.map((feedback, index) => (
+                <div 
+                  key={index} 
+                  className={`feedback-card ${feedback.tipo === 'avaliador' ? 'avaliacao-feedback' : 'orientador-feedback'}`}
+                >
+                  <div className="feedback-header">
+                    <div className="feedback-professor">
+                      <i className="fas fa-user-tie"></i>
+                      <strong>{feedback.professor}</strong>
+                      {feedback.professorEmail && (
+                        <span className="feedback-email">{feedback.professorEmail}</span>
+                      )}
+                      <span className={`feedback-tipo ${feedback.tipo === 'avaliador' ? 'tipo-avaliacao' : 'tipo-orientador'}`}>
+                        {feedback.tipo === 'avaliador' ? 'Avaliador' : 'Orientador'}
+                      </span>
+                    </div>
+                    <span className="feedback-date">
+                      <i className="far fa-calendar-alt"></i>
+                      {formatDateTime(feedback.data)}
+                    </span>
+                  </div>
+                  {feedback.nota && (
+                    <div className="feedback-nota">
+                      <i className="fas fa-star"></i>
+                      Nota: <strong>{feedback.nota}/10</strong>
+                    </div>
+                  )}
+                  <div className="feedback-message">
+                    <p>{feedback.feedback}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button
+            type="button"
+            className="aluno-btn aluno-btn--ghost"
+            onClick={() => setShowFeedbacksModal(false)}
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="aluno-page">
       <button
@@ -405,8 +807,7 @@ const AlunoPanel = () => {
               <div>
                 <h2 id="aluno-drawer-title">Novo projeto</h2>
                 <p className="aluno-drawer-lead">
-                  Preencha os dados e anexe o PDF do seu projeto para salvar
-                  como rascunho.
+                  Preencha os dados e anexe o PDF do seu projeto para salvar como rascunho.
                 </p>
               </div>
               <button
@@ -421,7 +822,7 @@ const AlunoPanel = () => {
 
             <form className="aluno-drawer-form" onSubmit={handleSalvarRascunho}>
               <label className="aluno-field" htmlFor="aluno-novo-titulo">
-                Título do projeto
+                Título do projeto *
               </label>
               <input
                 id="aluno-novo-titulo"
@@ -430,23 +831,47 @@ const AlunoPanel = () => {
                 placeholder="Ex.: Plataforma de mentoria entre pares"
                 value={novoTitulo}
                 onChange={(ev) => setNovoTitulo(ev.target.value)}
-                autoComplete="off"
+                required
+              />
+
+              <label className="aluno-field" htmlFor="aluno-novo-curso">
+                Curso
+              </label>
+              <input
+                id="aluno-novo-curso"
+                className="aluno-input"
+                type="text"
+                placeholder="Ex.: Sistemas de Informação"
+                value={novoCurso}
+                onChange={(ev) => setNovoCurso(ev.target.value)}
+              />
+
+              <label className="aluno-field" htmlFor="aluno-novo-descricao">
+                Descrição do projeto
+              </label>
+              <textarea
+                id="aluno-novo-descricao"
+                className="aluno-input"
+                rows="4"
+                placeholder="Descreva seu projeto..."
+                value={novaDescricao}
+                onChange={(ev) => setNovaDescricao(ev.target.value)}
               />
 
               <label className="aluno-field" htmlFor="aluno-novo-professor">
-                Professor responsável
+                Professor orientador *
               </label>
               <input
                 id="aluno-novo-professor"
                 className="aluno-input"
                 type="text"
-                placeholder="Nome completo do docente"
+                placeholder="Nome completo do docente orientador"
                 value={novoProfessor}
                 onChange={(ev) => setNovoProfessor(ev.target.value)}
-                autoComplete="name"
+                required
               />
 
-              <span className="aluno-field">Documento (PDF)</span>
+              <span className="aluno-field">Documento (PDF) *</span>
               <p className="aluno-upload-hint">
                 Arraste ou clique para anexar o PDF do seu projeto.
               </p>
@@ -456,7 +881,6 @@ const AlunoPanel = () => {
                 accept=".pdf,application/pdf"
                 className="aluno-file-input"
                 onChange={handlePdfChange}
-                aria-label="Selecionar arquivo PDF"
               />
               <button
                 type="button"
@@ -632,6 +1056,12 @@ const AlunoPanel = () => {
               </p>
             )}
 
+            {projectError && (
+              <p className="aluno-field aluno-field--error" role="alert">
+                {projectError}
+              </p>
+            )}
+
             {isLoadingProjetos ? (
               <p className="aluno-loading">
                 <i className="fas fa-spinner fa-spin" aria-hidden="true" />
@@ -657,6 +1087,9 @@ const AlunoPanel = () => {
                       <th>Projeto</th>
                       <th>Orientador</th>
                       <th>Status</th>
+                      <th>Avaliadores</th>
+                      <th>Notas</th>
+                      <th>Feedbacks</th>
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -668,36 +1101,119 @@ const AlunoPanel = () => {
                           <div className="aluno-project-meta">
                             {p.curso || "—"}
                           </div>
-                          <div className="aluno-feedback-block">
-                            <div className="aluno-feedback-block-label">
-                              Feedback do professor
+                          {p.descricao && (
+                            <div className="aluno-descricao-preview">
+                              {p.descricao.length > 100 
+                                ? p.descricao.substring(0, 100) + "..." 
+                                : p.descricao}
                             </div>
-                            {p.professorFeedback ? (
-                              <>
-                                <p className="aluno-feedback-block-message">
-                                  {p.professorFeedback}
-                                </p>
-                                <span className="aluno-feedback-block-date">
-                                  {p.professorFeedbackEm
-                                    ? `Registrado em ${formatDateTime(
-                                        p.professorFeedbackEm,
-                                      )}`
-                                    : "Data de envio não informada"}
-                                </span>
-                              </>
-                            ) : (
-                              <p className="aluno-feedback-block-empty">
-                                Nenhum feedback foi enviado para este projeto
-                                ainda.
-                              </p>
-                            )}
-                          </div>
+                          )}
                         </td>
                         <td>{p.orientador}</td>
                         <td>
                           <span className={badgeClass(p.statusKey)}>
                             {p.status}
                           </span>
+                        </td>
+                        <td>
+                          <div className="aluno-avaliadores-select">
+                            {isLoadingProfessores ? (
+                              <div className="loading-small">
+                                <i className="fas fa-spinner fa-spin" />
+                              </div>
+                            ) : professoresList.length === 0 ? (
+                              <p className="aluno-sem-avaliadores">
+                                Nenhum professor cadastrado
+                              </p>
+                            ) : (
+                              <>
+                                <select
+                                  className="aluno-multi-select"
+                                  value=""
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      adicionarAvaliador(p.id, e.target.value);
+                                      e.target.value = "";
+                                    }
+                                  }}
+                                  disabled={savingAvaliadorId === p.id || (selectedAvaliadores[p.id] || []).length >= 3}
+                                >
+                                  <option value="">Selecionar professor...</option>
+                                  {professoresList
+                                    .filter(prof => !(selectedAvaliadores[p.id] || []).includes(prof.id))
+                                    .map(prof => (
+                                      <option key={prof.id} value={prof.id}>
+                                        {prof.nome}
+                                      </option>
+                                    ))}
+                                </select>
+                                
+                                <div className="selected-avaliadores">
+                                  {(selectedAvaliadores[p.id] || []).map(profId => {
+                                    const prof = professoresList.find(prof => prof.id === profId);
+                                    return prof ? (
+                                      <div key={profId} className="avaliador-tag">
+                                        <span className="avaliador-nome">{prof.nome}</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => removerAvaliador(p.id, profId)}
+                                          className="remove-avaliador"
+                                          disabled={savingAvaliadorId === p.id}
+                                        >
+                                          ×
+                                        </button>
+                                      </div>
+                                    ) : null;
+                                  })}
+                                </div>
+                                
+                                {savingAvaliadorId === p.id && (
+                                  <div className="saving-indicator">
+                                    <i className="fas fa-spinner fa-spin" />
+                                    <span>Salvando...</span>
+                                  </div>
+                                )}
+                                
+                                <div className="avaliadores-counter">
+                                  {(selectedAvaliadores[p.id] || []).length} de 3 professores
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="aluno-notas-cell">
+                          {temAvaliacoes(p.id) ? (
+                            <button
+                              type="button"
+                              className="aluno-btn-notas"
+                              onClick={() => verDetalhesAvaliacoes(p)}
+                            >
+                              <span className="media-nota">{calcularMedia(p.id)}</span>
+                              <span className="qtd-avaliacoes">
+                                {avaliacoesProjetos[p.id]?.length || 0} avaliação(ões)
+                              </span>
+                            </button>
+                          ) : (
+                            <span className="aluno-sem-avaliacao">
+                              Sem avaliações
+                            </span>
+                          )}
+                        </td>
+                        <td className="aluno-feedbacks-cell">
+                          {temFeedbacks(p) || avaliacoesProjetos[p.id]?.some(av => av.comentario) ? (
+                            <button
+                              type="button"
+                              className="aluno-btn-feedback"
+                              onClick={() => verDetalhesFeedbacks(p)}
+                            >
+                              <i className="fas fa-comment-dots" />
+                              <span>Ver feedbacks</span>
+                            </button>
+                          ) : (
+                            <span className="aluno-sem-feedback">
+                              Sem feedbacks
+                            </span>
+                          )}
                         </td>
                         <td>
                           <div className="aluno-project-actions">
@@ -707,7 +1223,7 @@ const AlunoPanel = () => {
                               onClick={() => startEdit(p)}
                               title="Editar projeto"
                             >
-                              <i className="fas fa-pen" aria-hidden="true" />
+                              <i className="fas fa-pen" />
                               Editar
                             </button>
                             {p.arquivos?.length > 0 && (
@@ -717,10 +1233,7 @@ const AlunoPanel = () => {
                                 onClick={() => openViewPdf(p)}
                                 title="Visualizar PDF"
                               >
-                                <i
-                                  className="fas fa-file-pdf"
-                                  aria-hidden="true"
-                                />
+                                <i className="fas fa-file-pdf" />
                                 PDF
                               </button>
                             )}
@@ -730,23 +1243,21 @@ const AlunoPanel = () => {
                               onClick={() => startDelete(p)}
                               title="Excluir projeto"
                             >
-                              <i className="fas fa-trash" aria-hidden="true" />
+                              <i className="fas fa-trash" />
                               Excluir
                             </button>
 
                             {isDraftProject(p) && (
-                              <div className="aluno-status-update">
-                                <button
-                                  type="button"
-                                  className="aluno-btn aluno-btn--primary aluno-btn--sm"
-                                  onClick={() => updateStatusProjeto(p)}
-                                  disabled={isUpdatingStatusId === p.id}
-                                >
-                                  {isUpdatingStatusId === p.id
-                                    ? "Enviando..."
-                                    : "Enviar para análise"}
-                                </button>
-                              </div>
+                              <button
+                                type="button"
+                                className="aluno-btn aluno-btn--primary aluno-btn--sm"
+                                onClick={() => updateStatusProjeto(p)}
+                                disabled={isUpdatingStatusId === p.id}
+                              >
+                                {isUpdatingStatusId === p.id
+                                  ? "Enviando..."
+                                  : "Enviar"}
+                              </button>
                             )}
                           </div>
                         </td>
@@ -760,43 +1271,111 @@ const AlunoPanel = () => {
         </section>
       </main>
 
+      {/* Modal de Edição */}
       {showEditModal && (
         <div className="modal-backdrop" role="dialog" aria-modal="true">
-          <div className="modal">
+          <div className="modal modal--large">
             <div className="modal-header">
-              <h3>Editar projeto</h3>
+              <h3>Editar Projeto</h3>
               <button
                 type="button"
                 className="modal-close"
                 onClick={cancelEdit}
-                aria-label="Fechar"
               >
                 ×
               </button>
             </div>
             <div className="modal-body">
-              <label className="aluno-field" htmlFor="edit-titulo">
-                Título
-              </label>
+              <label className="aluno-field">Título do projeto *</label>
               <input
-                id="edit-titulo"
                 className="aluno-input"
                 value={editTitulo}
                 onChange={(e) => setEditTitulo(e.target.value)}
+                placeholder="Título do projeto"
               />
-              <label className="aluno-field" htmlFor="edit-orientador">
-                Orientador
-              </label>
+
+              <label className="aluno-field">Curso</label>
               <input
-                id="edit-orientador"
+                className="aluno-input"
+                value={editCurso}
+                onChange={(e) => setEditCurso(e.target.value)}
+                placeholder="Curso"
+              />
+
+              <label className="aluno-field">Descrição</label>
+              <textarea
+                className="aluno-input"
+                rows="5"
+                value={editDescricao}
+                onChange={(e) => setEditDescricao(e.target.value)}
+                placeholder="Descreva seu projeto..."
+              />
+
+              <label className="aluno-field">Professor orientador *</label>
+              <input
                 className="aluno-input"
                 value={editOrientador}
                 onChange={(e) => setEditOrientador(e.target.value)}
+                placeholder="Nome do orientador"
               />
+
+              <label className="aluno-field">Professores Avaliadores (máx. 3)</label>
+              <div className="edit-avaliadores-container">
+                {isLoadingProfessores ? (
+                  <div className="loading-small">
+                    <i className="fas fa-spinner fa-spin" />
+                    Carregando...
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      className="aluno-multi-select"
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          toggleEditAvaliador(e.target.value);
+                          e.target.value = "";
+                        }
+                      }}
+                      disabled={editSelectedAvaliadores.length >= 3}
+                    >
+                      <option value="">Adicionar avaliador...</option>
+                      {professoresList
+                        .filter(prof => !editSelectedAvaliadores.includes(prof.id))
+                        .map(prof => (
+                          <option key={prof.id} value={prof.id}>
+                            {prof.nome}
+                          </option>
+                        ))}
+                    </select>
+                    
+                    <div className="selected-avaliadores">
+                      {editSelectedAvaliadores.map(profId => {
+                        const prof = professoresList.find(p => p.id === profId);
+                        return prof ? (
+                          <div key={profId} className="avaliador-tag">
+                            <span className="avaliador-nome">{prof.nome}</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleEditAvaliador(profId)}
+                              className="remove-avaliador"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                    
+                    <div className="avaliadores-counter">
+                      {editSelectedAvaliadores.length} de 3 professores selecionados
+                    </div>
+                  </>
+                )}
+              </div>
+
               {projectError && (
-                <p className="aluno-field aluno-field--error" role="alert">
-                  {projectError}
-                </p>
+                <p className="aluno-field aluno-field--error">{projectError}</p>
               )}
             </div>
             <div className="modal-footer">
@@ -812,7 +1391,7 @@ const AlunoPanel = () => {
                 className="aluno-btn aluno-btn--primary"
                 onClick={() => saveEdit(editingId)}
               >
-                Salvar
+                Salvar alterações
               </button>
             </div>
           </div>
@@ -828,29 +1407,21 @@ const AlunoPanel = () => {
                 type="button"
                 className="modal-close"
                 onClick={cancelDelete}
-                aria-label="Fechar"
-                disabled={isDeleting}
               >
                 ×
               </button>
             </div>
             <div className="modal-body">
               <p>
-                Tem certeza que deseja excluir <strong>{deletingTitulo}</strong>
-                ? Esta ação não pode ser desfeita e o PDF será removido.
+                Tem certeza que deseja excluir <strong>{deletingTitulo}</strong>?
+                Esta ação não pode ser desfeita.
               </p>
-              {projectError && (
-                <p className="aluno-field aluno-field--error" role="alert">
-                  {projectError}
-                </p>
-              )}
             </div>
             <div className="modal-footer">
               <button
                 type="button"
                 className="aluno-btn aluno-btn--ghost"
                 onClick={cancelDelete}
-                disabled={isDeleting}
               >
                 Cancelar
               </button>
@@ -860,7 +1431,7 @@ const AlunoPanel = () => {
                 onClick={confirmDelete}
                 disabled={isDeleting}
               >
-                {isDeleting ? "Excluindo..." : "Excluir projeto"}
+                {isDeleting ? "Excluindo..." : "Excluir"}
               </button>
             </div>
           </div>
@@ -871,12 +1442,11 @@ const AlunoPanel = () => {
         <div className="modal-backdrop" role="dialog" aria-modal="true">
           <div className="modal modal--large">
             <div className="modal-header">
-              <h3>Visualizar documento</h3>
+              <h3>Visualizar PDF</h3>
               <button
                 type="button"
                 className="modal-close"
                 onClick={() => setShowViewModal(false)}
-                aria-label="Fechar"
               >
                 ×
               </button>
@@ -900,6 +1470,9 @@ const AlunoPanel = () => {
           </div>
         </div>
       )}
+
+      {showAvaliacoesModal && <AvaliacoesModal />}
+      {showFeedbacksModal && <FeedbacksModal />}
     </div>
   );
 };

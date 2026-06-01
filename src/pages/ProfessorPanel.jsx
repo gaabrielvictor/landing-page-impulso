@@ -1,3 +1,4 @@
+// ProfessorPanel.jsx
 import React, {
   useCallback,
   useEffect,
@@ -13,6 +14,9 @@ import {
   getProjetoArquivoUrl,
   listarProjetosProfessor,
   salvarFeedbackProjeto,
+  listarAvaliadoresENotas,
+  salvarAvaliacaoProjeto,
+  buscarAvaliacoesProjeto,
 } from "../utils/projetosApi";
 
 const badgeClass = (key) => {
@@ -30,7 +34,6 @@ const formatDateTime = (value) => {
   if (Number.isNaN(date.getTime())) {
     return "Data indisponível";
   }
-
   return date.toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -51,10 +54,23 @@ const ProfessorPanel = () => {
   const [loadError, setLoadError] = useState("");
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewUrl, setViewUrl] = useState("");
+  
+  // States para feedback (orientador)
   const [feedbackById, setFeedbackById] = useState({});
   const [savingFeedbackId, setSavingFeedbackId] = useState(null);
   const [feedbackError, setFeedbackError] = useState("");
   const [feedbackSuccess, setFeedbackSuccess] = useState("");
+  
+  // States para avaliação com nota (podendo editar)
+  const [notaById, setNotaById] = useState({});
+  const [comentarioById, setComentarioById] = useState({});
+  const [savingAvaliacaoId, setSavingAvaliacaoId] = useState(null);
+  const [showAvaliadoresModal, setShowAvaliadoresModal] = useState(false);
+  const [avaliadoresList, setAvaliadoresList] = useState([]);
+  const [projetoSelecionado, setProjetoSelecionado] = useState(null);
+  
+  // State para edição de nota
+  const [editandoNotaId, setEditandoNotaId] = useState(null);
 
   const iniciais = useMemo(() => {
     const local = email.split("@")[0] || "AD";
@@ -89,12 +105,134 @@ const ProfessorPanel = () => {
     }
 
     setProjetos(res.projetos);
-    setFeedbackById(
-      res.projetos.reduce((accumulator, projeto) => {
-        accumulator[projeto.id] = projeto.professorFeedback || "";
-        return accumulator;
-      }, {}),
-    );
+    
+    // Inicializar states
+    const feedbackInicial = {};
+    const notaInicial = {};
+    const comentarioInicial = {};
+    
+    for (const projeto of res.projetos) {
+      feedbackInicial[projeto.id] = projeto.professorFeedback || "";
+      notaInicial[projeto.id] = "";
+      comentarioInicial[projeto.id] = "";
+      
+      // Buscar avaliação existente deste professor para este projeto
+      const avaliacoesRes = await buscarAvaliacoesProjeto(projeto.id);
+      if (avaliacoesRes.ok && avaliacoesRes.avaliacoes) {
+        const minhaAvaliacao = avaliacoesRes.avaliacoes.find(
+          av => av.professorEmail === email
+        );
+        if (minhaAvaliacao) {
+          notaInicial[projeto.id] = minhaAvaliacao.nota.toString();
+          comentarioInicial[projeto.id] = minhaAvaliacao.comentario || "";
+        }
+      }
+    }
+    
+    setFeedbackById(feedbackInicial);
+    setNotaById(notaInicial);
+    setComentarioById(comentarioInicial);
+  }, [email]);
+
+  // Função para salvar feedback (orientador)
+  const salvarFeedback = async (projetoId) => {
+    const feedback = feedbackById[projetoId];
+    
+    if (!feedback || feedback.trim() === "") {
+      setFeedbackError("Digite um feedback antes de salvar.");
+      setTimeout(() => setFeedbackError(""), 3000);
+      return;
+    }
+    
+    setSavingFeedbackId(projetoId);
+    setFeedbackError("");
+    setFeedbackSuccess("");
+    
+    const res = await salvarFeedbackProjeto(projetoId, feedback);
+    setSavingFeedbackId(null);
+    
+    if (!res.ok) {
+      setFeedbackError(res.error || "Erro ao salvar feedback.");
+      setTimeout(() => setFeedbackError(""), 3000);
+      return;
+    }
+    
+    setProjetos(prev => prev.map(p => 
+      p.id === projetoId 
+        ? { ...p, professorFeedback: feedback, professorFeedbackEm: new Date() } 
+        : p
+    ));
+    
+    setFeedbackSuccess("Feedback salvo com sucesso!");
+    setTimeout(() => setFeedbackSuccess(""), 3000);
+  };
+
+  // Função para salvar/editar avaliação com nota
+  const salvarAvaliacao = async (projetoId) => {
+    const nota = notaById[projetoId];
+    const comentario = comentarioById[projetoId] || "";
+    
+    if (!nota || nota === "") {
+      setFeedbackError("Por favor, insira uma nota (0-10).");
+      setTimeout(() => setFeedbackError(""), 3000);
+      return;
+    }
+    
+    const notaNum = parseFloat(nota);
+    if (isNaN(notaNum) || notaNum < 0 || notaNum > 10) {
+      setFeedbackError("Por favor, insira uma nota válida entre 0 e 10.");
+      setTimeout(() => setFeedbackError(""), 3000);
+      return;
+    }
+    
+    if (!comentario) {
+      setFeedbackError("Por favor, escreva um comentário para a avaliação.");
+      setTimeout(() => setFeedbackError(""), 3000);
+      return;
+    }
+    
+    setSavingAvaliacaoId(projetoId);
+    setFeedbackError("");
+    setFeedbackSuccess("");
+    
+    const res = await salvarAvaliacaoProjeto(projetoId, notaNum, comentario);
+    setSavingAvaliacaoId(null);
+    
+    if (!res.ok) {
+      setFeedbackError(res.error || "Erro ao salvar avaliação.");
+      setTimeout(() => setFeedbackError(""), 3000);
+      return;
+    }
+    
+    setFeedbackSuccess(`Avaliação salva/atualizada! Nota: ${notaNum}/10`);
+    setTimeout(() => setFeedbackSuccess(""), 3000);
+    
+    // Sair do modo de edição
+    setEditandoNotaId(null);
+  };
+
+  // Função para iniciar edição da nota
+  const iniciarEdicao = (projetoId) => {
+    setEditandoNotaId(projetoId);
+  };
+
+  // Função para cancelar edição
+  const cancelarEdicao = () => {
+    setEditandoNotaId(null);
+  };
+
+  // Buscar lista de avaliadores e notas de um projeto
+  const verAvaliadoresENotas = useCallback(async (projeto) => {
+    setProjetoSelecionado(projeto);
+    const res = await listarAvaliadoresENotas(projeto.id);
+    
+    if (res.ok && res.avaliadores) {
+      setAvaliadoresList(res.avaliadores);
+      setShowAvaliadoresModal(true);
+    } else {
+      setFeedbackError("Erro ao carregar lista de avaliadores");
+      setTimeout(() => setFeedbackError(""), 3000);
+    }
   }, []);
 
   useEffect(() => {
@@ -104,13 +242,11 @@ const ProfessorPanel = () => {
 
   useEffect(() => {
     if (!profileOpen) return undefined;
-
     const onClick = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
       }
     };
-
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, [profileOpen]);
@@ -119,41 +255,11 @@ const ProfessorPanel = () => {
     const arquivo = projeto.arquivos?.[0];
     if (!arquivo) {
       setFeedbackError("Este projeto não possui PDF anexado.");
+      setTimeout(() => setFeedbackError(""), 3000);
       return;
     }
-
     setViewUrl(getProjetoArquivoUrl(projeto.id, arquivo.id));
     setShowViewModal(true);
-  };
-
-  const saveFeedback = async (projeto) => {
-    const feedback = (feedbackById[projeto.id] || "").trim();
-
-    if (!feedback) {
-      setFeedbackError("Digite um feedback para o aluno.");
-      return;
-    }
-
-    setSavingFeedbackId(projeto.id);
-    setFeedbackError("");
-    setFeedbackSuccess("");
-
-    const res = await salvarFeedbackProjeto(projeto.id, feedback);
-    setSavingFeedbackId(null);
-
-    if (!res.ok) {
-      setFeedbackError(res.error || "Erro ao salvar feedback.");
-      return;
-    }
-
-    setProjetos((lista) =>
-      lista.map((item) => (item.id === projeto.id ? res.projeto : item)),
-    );
-    setFeedbackById((current) => ({
-      ...current,
-      [projeto.id]: res.projeto.professorFeedback || "",
-    }));
-    setFeedbackSuccess("Feedback salvo com sucesso.");
   };
 
   if (!isAuth) {
@@ -164,6 +270,79 @@ const ProfessorPanel = () => {
     localStorage.removeItem("isAdmin");
     localStorage.removeItem("professorEmail");
     navigate("/login");
+  };
+
+  const AvaliadoresModal = () => {
+    const calcularMedia = () => {
+      if (avaliadoresList.length === 0) return 0;
+      const soma = avaliadoresList.reduce((acc, av) => acc + (av.nota || 0), 0);
+      return (soma / avaliadoresList.length).toFixed(1);
+    };
+
+    return (
+      <div className="professor-modal-backdrop" role="dialog" aria-modal="true">
+        <div className="professor-modal professor-modal--large">
+          <div className="professor-modal-header">
+            <h3>Avaliadores do Projeto</h3>
+            <h4>{projetoSelecionado?.titulo}</h4>
+            <button
+              type="button"
+              className="professor-modal-close"
+              onClick={() => setShowAvaliadoresModal(false)}
+            >
+              ×
+            </button>
+          </div>
+          <div className="professor-modal-body">
+            {avaliadoresList.length === 0 ? (
+              <p>Nenhum avaliador registrado para este projeto.</p>
+            ) : (
+              <>
+                <table className="professor-avaliadores-table">
+                  <thead>
+                    <tr>
+                      <th>Professor Avaliador</th>
+                      <th>Nota</th>
+                      <th>Comentário</th>
+                      <th>Data</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {avaliadoresList.map((avaliador, index) => (
+                      <tr key={index}>
+                        <td>{avaliador.nome || avaliador.professorEmail || avaliador.email}</td>
+                        <td className="nota-cell">{avaliador.nota || "—"}/10</td>
+                        <td>{avaliador.comentario || "—"}</td>
+                        <td>{formatDateTime(avaliador.dataCriacao || avaliador.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {avaliadoresList.length > 0 && (
+                  <div className="avaliacao-media">
+                    <strong>Média das notas: {calcularMedia()}/10</strong>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <div className="professor-modal-footer">
+            <button
+              type="button"
+              className="professor-btn professor-btn--ghost"
+              onClick={() => setShowAvaliadoresModal(false)}
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Verificar se já existe nota salva para um projeto
+  const temNotaSalva = (projetoId) => {
+    return notaById[projetoId] && notaById[projetoId] !== "";
   };
 
   return (
@@ -212,13 +391,9 @@ const ProfessorPanel = () => {
                 id="professor-profile-menu"
                 className="professor-topbar-profile-menu"
                 role="menu"
-                aria-labelledby="professor-profile-trigger"
               >
                 <div className="professor-topbar-profile-menu-head">
-                  <span
-                    className="professor-topbar-avatar professor-topbar-avatar--lg"
-                    aria-hidden="true"
-                  >
+                  <span className="professor-topbar-avatar professor-topbar-avatar--lg">
                     {iniciais}
                   </span>
                   <div>
@@ -232,26 +407,17 @@ const ProfessorPanel = () => {
                 </div>
                 <ul className="professor-topbar-profile-list">
                   <li>
-                    <i className="fas fa-envelope" aria-hidden="true" />
+                    <i className="fas fa-envelope" />
                     <div>
                       <strong>E-mail institucional</strong>
                       {email || "—"}
                     </div>
                   </li>
                   <li>
-                    <i className="fas fa-building-columns" aria-hidden="true" />
+                    <i className="fas fa-building-columns" />
                     <div>
                       <strong>Instituição</strong>
                       {instituicao}
-                    </div>
-                  </li>
-                  <li>
-                    <i className="fas fa-user-check" aria-hidden="true" />
-                    <div>
-                      <strong>Acesso</strong>
-                      {email === "admin@unifacisa.com"
-                        ? "Conta administrativa (demonstração)"
-                        : "Conta de professor (cadastro na plataforma)"}
                     </div>
                   </li>
                 </ul>
@@ -272,15 +438,11 @@ const ProfessorPanel = () => {
       <main className="professor-main">
         <h1 className="professor-main-title">Painel do professor</h1>
         <p className="professor-main-subtitle">
-          Acompanhe os projetos acadêmicos em avaliação e veja quem submeteu
-          cada PDF para facilitar a análise.
+          Acompanhe os projetos acadêmicos em avaliação, atribua notas, dê feedback e veja quem já avaliou cada projeto.
         </p>
 
-        <section
-          className="professor-card professor-card--full"
-          aria-labelledby="professor-projetos-heading"
-        >
-          <h2 id="professor-projetos-heading">Projetos em avaliação</h2>
+        <section className="professor-card professor-card--full">
+          <h2>Projetos em avaliação</h2>
           <p className="professor-projects-count">
             {isLoadingProjetos
               ? "Carregando..."
@@ -307,22 +469,19 @@ const ProfessorPanel = () => {
           )}
 
           {feedbackSuccess && (
-            <p
-              className="professor-field professor-field--success"
-              role="status"
-            >
+            <p className="professor-field professor-field--success" role="status">
               {feedbackSuccess}
             </p>
           )}
 
           {isLoadingProjetos ? (
             <p className="professor-loading">
-              <i className="fas fa-spinner fa-spin" aria-hidden="true" />
+              <i className="fas fa-spinner fa-spin" />
               Carregando projetos...
             </p>
           ) : projetos.length === 0 && !loadError ? (
             <div className="professor-empty">
-              <i className="fas fa-folder-open" aria-hidden="true" />
+              <i className="fas fa-folder-open" />
               <p>Nenhum projeto disponível para avaliação no momento.</p>
             </div>
           ) : (
@@ -331,142 +490,172 @@ const ProfessorPanel = () => {
                 <thead>
                   <tr>
                     <th>Projeto</th>
-                    <th>Submetido por</th>
+                    <th>Aluno</th>
                     <th>Orientador</th>
                     <th>Status</th>
-                    <th>Ações</th>
                     <th>Feedback</th>
+                    <th>Minha Avaliação</th>
+                    <th>Avaliadores</th>
+                    <th>PDF</th>
                   </tr>
                 </thead>
                 <tbody>
                   {projetos.map((p) => (
                     <tr key={p.id}>
                       <td>
-                        <div className="professor-project-title">
-                          {p.titulo}
-                        </div>
-                        <div className="professor-project-meta">
-                          {p.curso || "—"}
-                        </div>
+                        <div className="professor-project-title">{p.titulo}</div>
+                        <div className="professor-project-meta">{p.curso || "—"}</div>
                       </td>
                       <td>
-                        <div className="professor-project-submitter">
-                          {p.alunoName}
-                        </div>
-                        <div className="professor-project-meta">
-                          {p.alunoEmail || "—"}
-                        </div>
+                        <div className="professor-project-submitter">{p.alunoName}</div>
+                        <div className="professor-project-meta">{p.alunoEmail || "—"}</div>
                       </td>
                       <td>{p.orientador}</td>
                       <td>
-                        <span className={badgeClass(p.statusKey)}>
-                          {p.status}
-                        </span>
+                        <span className={badgeClass(p.statusKey)}>{p.status}</span>
                       </td>
-                      <td>
-                        <div className="professor-project-actions">
-                          {p.arquivos?.length > 0 ? (
-                            <button
-                              type="button"
-                              className="professor-btn professor-btn--ghost professor-btn--sm"
-                              onClick={() => openViewPdf(p)}
-                              title="Visualizar PDF"
-                            >
-                              <i
-                                className="fas fa-file-pdf"
-                                aria-hidden="true"
-                              />
-                              Visualizar PDF
-                            </button>
-                          ) : (
-                            <span className="professor-project-meta">
-                              Nenhum PDF anexado
-                            </span>
+                      
+                      {/* Coluna de Feedback do Orientador */}
+                      <td className="professor-feedback-cell">
+                        <div className="professor-feedback-form">
+                          <textarea
+                            className="professor-feedback-textarea-sm"
+                            placeholder="Digite seu feedback para o aluno..."
+                            value={feedbackById[p.id] ?? ""}
+                            onChange={(e) => {
+                              setFeedbackById(prev => ({ ...prev, [p.id]: e.target.value }));
+                              setFeedbackError("");
+                            }}
+                            rows="3"
+                          />
+                          <button
+                            type="button"
+                            className="professor-btn professor-btn--primary professor-btn--sm"
+                            onClick={() => salvarFeedback(p.id)}
+                            disabled={savingFeedbackId === p.id}
+                          >
+                            {savingFeedbackId === p.id ? "Salvando..." : "Enviar Feedback"}
+                          </button>
+                          {p.professorFeedback && (
+                            <div className="feedback-enviado">
+                              <i className="fas fa-check-circle" />
+                              <small>Último: {formatDateTime(p.professorFeedbackEm)}</small>
+                            </div>
                           )}
                         </div>
                       </td>
-                      <td>
-                        <div className="professor-feedback-card">
-                          <div className="professor-feedback-top">
-                            <div>
-                              <p className="professor-feedback-heading">
-                                Feedback do professor
-                              </p>
-                              <p className="professor-feedback-subtitle">
-                                {p.professorFeedback
-                                  ? "Acompanhe a última observação registrada"
-                                  : "Organize uma avaliação objetiva para o aluno"}
-                              </p>
+                      
+                      {/* Coluna de Minha Avaliação (Nota + Comentário - Editável) */}
+                      <td className="professor-avaliacao-cell">
+                        {editandoNotaId === p.id ? (
+                          // Modo de edição
+                          <div className="professor-avaliacao-edicao">
+                            <input
+                              type="number"
+                              className="professor-nota-input"
+                              placeholder="Nota (0-10)"
+                              value={notaById[p.id] || ""}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "" || (Number(value) >= 0 && Number(value) <= 10)) {
+                                  setNotaById(prev => ({ ...prev, [p.id]: value }));
+                                }
+                              }}
+                              step="0.5"
+                              min="0"
+                              max="10"
+                              autoFocus
+                            />
+                            <textarea
+                              className="professor-comentario-input"
+                              placeholder="Comentário da avaliação..."
+                              value={comentarioById[p.id] || ""}
+                              onChange={(e) => {
+                                setComentarioById(prev => ({ ...prev, [p.id]: e.target.value }));
+                              }}
+                              rows="2"
+                            />
+                            <div className="professor-avaliacao-actions">
+                              <button
+                                type="button"
+                                className="professor-btn professor-btn--primary professor-btn--sm"
+                                onClick={() => salvarAvaliacao(p.id)}
+                                disabled={savingAvaliacaoId === p.id}
+                              >
+                                {savingAvaliacaoId === p.id ? "Salvando..." : "Salvar"}
+                              </button>
+                              <button
+                                type="button"
+                                className="professor-btn professor-btn--ghost professor-btn--sm"
+                                onClick={cancelarEdicao}
+                              >
+                                Cancelar
+                              </button>
                             </div>
-                            <span
-                              className={`professor-feedback-status ${
-                                p.professorFeedback
-                                  ? "professor-feedback-status--sent"
-                                  : "professor-feedback-status--draft"
-                              }`}
-                            >
-                              {p.professorFeedback
-                                ? "Feedback enviado"
-                                : "Em edição"}
-                            </span>
                           </div>
-
-                          <div className="professor-feedback-summary">
-                            <div className="professor-feedback-summary-label">
-                              Último feedback enviado
-                            </div>
-                            {p.professorFeedback ? (
-                              <div className="professor-feedback-summary-body">
-                                <p>{p.professorFeedback}</p>
-                                <span className="professor-feedback-date">
-                                  {p.professorFeedbackEm
-                                    ? `Registrado em ${formatDateTime(
-                                        p.professorFeedbackEm,
-                                      )}`
-                                    : "Data de envio não informada"}
-                                </span>
-                              </div>
+                        ) : (
+                          // Modo de visualização
+                          <div className="professor-avaliacao-view">
+                            {temNotaSalva(p.id) ? (
+                              <>
+                                <div className="avaliacao-nota-exibida">
+                                  <span className="nota-valor">{notaById[p.id]}/10</span>
+                                  <button
+                                    type="button"
+                                    className="professor-btn-editar"
+                                    onClick={() => iniciarEdicao(p.id)}
+                                    title="Editar avaliação"
+                                  >
+                                    <i className="fas fa-pen" />
+                                  </button>
+                                </div>
+                                {comentarioById[p.id] && (
+                                  <div className="avaliacao-comentario-exibido">
+                                    <small>{comentarioById[p.id]}</small>
+                                  </div>
+                                )}
+                              </>
                             ) : (
-                              <p className="professor-feedback-empty">
-                                Nenhum feedback foi enviado até o momento.
-                              </p>
+                              <div className="avaliacao-sem-nota">
+                                <span>Nenhuma avaliação</span>
+                                <button
+                                  type="button"
+                                  className="professor-btn professor-btn--primary professor-btn--sm"
+                                  onClick={() => iniciarEdicao(p.id)}
+                                >
+                                  <i className="fas fa-plus" />
+                                  Avaliar
+                                </button>
+                              </div>
                             )}
                           </div>
-
-                          <label
-                            className="professor-feedback-label"
-                            htmlFor={`feedback-${p.id}`}
+                        )}
+                      </td>
+                      
+                      <td>
+                        <button
+                          type="button"
+                          className="professor-btn professor-btn--ghost professor-btn--sm"
+                          onClick={() => verAvaliadoresENotas(p)}
+                        >
+                          <i className="fas fa-users" />
+                          Ver avaliadores
+                        </button>
+                      </td>
+                      
+                      <td>
+                        {p.arquivos?.length > 0 ? (
+                          <button
+                            type="button"
+                            className="professor-btn professor-btn--ghost professor-btn--sm"
+                            onClick={() => openViewPdf(p)}
                           >
-                            Escrever nova avaliação
-                          </label>
-                          <textarea
-                            id={`feedback-${p.id}`}
-                            className="professor-feedback-textarea"
-                            value={feedbackById[p.id] ?? ""}
-                            onChange={(event) => {
-                              setFeedbackById((current) => ({
-                                ...current,
-                                [p.id]: event.target.value,
-                              }));
-                              setFeedbackError("");
-                              setFeedbackSuccess("");
-                            }}
-                            placeholder="Ex.: destaque os pontos fortes, descreva os ajustes necessários e o próximo passo esperado"
-                          />
-
-                          <div className="professor-feedback-actions">
-                            <button
-                              type="button"
-                              className="professor-btn professor-btn--primary professor-btn--sm"
-                              onClick={() => saveFeedback(p)}
-                              disabled={savingFeedbackId === p.id}
-                            >
-                              {savingFeedbackId === p.id
-                                ? "Salvando..."
-                                : "Salvar feedback"}
-                            </button>
-                          </div>
-                        </div>
+                            <i className="fas fa-file-pdf" />
+                            Ver PDF
+                          </button>
+                        ) : (
+                          <span className="professor-project-meta">Sem PDF</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -478,11 +667,7 @@ const ProfessorPanel = () => {
       </main>
 
       {showViewModal && (
-        <div
-          className="professor-modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="professor-modal-backdrop" role="dialog">
           <div className="professor-modal professor-modal--large">
             <div className="professor-modal-header">
               <h3>Visualizar documento</h3>
@@ -490,7 +675,6 @@ const ProfessorPanel = () => {
                 type="button"
                 className="professor-modal-close"
                 onClick={() => setShowViewModal(false)}
-                aria-label="Fechar"
               >
                 ×
               </button>
@@ -514,6 +698,8 @@ const ProfessorPanel = () => {
           </div>
         </div>
       )}
+
+      {showAvaliadoresModal && <AvaliadoresModal />}
     </div>
   );
 };
