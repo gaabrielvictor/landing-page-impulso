@@ -4,6 +4,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import projetosRoutes from "./routes/projetos.js";
+import professoresRoutes from "./routes/professores.js";
+
+
 
 dotenv.config();
 
@@ -40,6 +43,7 @@ mongoose
 // Rotas
 app.use("/auth", authRoutes);
 app.use("/projetos", projetosRoutes);
+app.use("/professores", professoresRoutes); 
 
 // Rota de health check
 app.get("/health", (req, res) => {
@@ -67,3 +71,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
+

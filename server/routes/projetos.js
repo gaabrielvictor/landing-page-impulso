@@ -4,6 +4,9 @@ import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import Project from "../models/Project.js";
+import User from "../models/User.js";
+import ProjetoAvaliador from "../models/ProjetoAvaliador.js";
+import Avaliacao from "../models/Avaliacao.js";
 
 const router = express.Router();
 
@@ -103,6 +106,10 @@ router.get("/aluno/:email", async (req, res) => {
   }
 });
 
+/**
+ * GET /projetos/avaliacao
+ * Lista projetos em avaliação
+ */
 router.get("/avaliacao", async (_req, res) => {
   try {
     const projects = await Project.find({ status: "em_avaliacao" }).sort({
@@ -122,6 +129,10 @@ router.get("/avaliacao", async (_req, res) => {
   }
 });
 
+/**
+ * GET /projetos
+ * Lista todos os projetos
+ */
 router.get("/", async (_req, res) => {
   try {
     const projects = await Project.find({}).sort({ createdAt: -1 });
@@ -131,13 +142,17 @@ router.get("/", async (_req, res) => {
       projetos: projects.map(createProjectResponse),
     });
   } catch (error) {
-    console.error("Erro ao listar projetos do professor:", error);
+    console.error("Erro ao listar projetos:", error);
     return res
       .status(500)
       .json({ ok: false, error: "Erro ao listar projetos." });
   }
 });
 
+/**
+ * POST /projetos/novo
+ * Cria um novo projeto com PDF
+ */
 router.post("/novo", upload.single("pdf"), async (req, res) => {
   try {
     const { alunoEmail, alunoName, titulo, orientador, curso = "" } = req.body;
@@ -315,6 +330,7 @@ router.delete("/:id", async (req, res) => {
       .json({ ok: false, error: "Erro ao excluir projeto." });
   }
 });
+
 /**
  * GET /projetos/:id/arquivo/:fileId
  * Retorna o arquivo PDF armazenado para visualização
@@ -354,4 +370,257 @@ router.get("/:id/arquivo/:fileId", async (req, res) => {
       .json({ ok: false, error: "Erro ao servir arquivo." });
   }
 });
+
+// ========== NOVAS ROTAS PARA PROFESSORES E AVALIAÇÕES ==========
+
+/**
+ * GET /professores - Listar todos os professores
+ */
+router.get("/professores", async (req, res) => {
+  try {
+    const professores = await User.find(
+      { role: "professor" },
+      "id name email instituicao"
+    ).sort({ name: 1 });
+    
+    res.json(professores);
+  } catch (error) {
+    console.error("Erro ao listar professores:", error);
+    res.status(500).json({ error: "Erro ao carregar professores" });
+  }
+});
+
+/**
+ * GET /professores/curso/:curso - Listar professores por curso
+ */
+router.get("/professores/curso/:curso", async (req, res) => {
+  try {
+    const { curso } = req.params;
+    
+    const professores = await User.find(
+      { 
+        role: "professor",
+        instituicao: { $regex: curso, $options: "i" }
+      },
+      "id name email instituicao"
+    ).sort({ name: 1 });
+    
+    res.json(professores);
+  } catch (error) {
+    console.error("Erro ao listar professores por curso:", error);
+    res.status(500).json({ error: "Erro ao carregar professores" });
+  }
+});
+
+/**
+ * POST /projetos/:id/avaliadores - Salvar avaliadores do projeto
+ */
+router.post("/:id/avaliadores", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { avaliadores } = req.body;
+    
+    // Remove todos os avaliadores antigos do projeto
+    await ProjetoAvaliador.deleteMany({ projetoId: id });
+    
+    // Adiciona os novos avaliadores
+    if (avaliadores && avaliadores.length > 0) {
+      const avaliadoresDocs = avaliadores.map(professorId => ({
+        projetoId: id,
+        professorId: professorId
+      }));
+      
+      await ProjetoAvaliador.insertMany(avaliadoresDocs);
+    }
+    
+    res.json({ ok: true, message: "Avaliadores salvos com sucesso" });
+  } catch (error) {
+    console.error("Erro ao salvar avaliadores:", error);
+    res.status(500).json({ error: "Erro ao salvar avaliadores" });
+  }
+});
+
+/**
+ * GET /projetos/:id/avaliadores - Buscar avaliadores do projeto
+ */
+router.get("/:id/avaliadores", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const avaliadoresRelacoes = await ProjetoAvaliador.find({ projetoId: id });
+    
+    const professorIds = avaliadoresRelacoes.map(rel => rel.professorId);
+    
+    const avaliadores = await User.find(
+      { id: { $in: professorIds } },
+      "id name email instituicao"
+    );
+    
+    res.json(avaliadores);
+  } catch (error) {
+    console.error("Erro ao buscar avaliadores:", error);
+    res.status(500).json({ error: "Erro ao buscar avaliadores" });
+  }
+});
+
+/**
+ * POST /projetos/:id/avaliacoes - Salvar avaliação de um professor
+ */
+router.post("/:id/avaliacoes", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { professorEmail, nota, comentario } = req.body;
+    
+    // Buscar o professor pelo email
+    const professor = await User.findOne({ email: professorEmail, role: "professor" });
+    
+    if (!professor) {
+      return res.status(404).json({ error: "Professor não encontrado" });
+    }
+    
+    // Atualizar ou criar avaliação
+    const avaliacao = await Avaliacao.findOneAndUpdate(
+      { projetoId: id, professorId: professor.id },
+      { 
+        nota, 
+        comentario
+      },
+      { upsert: true, new: true }
+    );
+    
+    res.json({ ok: true, message: "Avaliação salva com sucesso", avaliacao });
+  } catch (error) {
+    console.error("Erro ao salvar avaliação:", error);
+    res.status(500).json({ error: "Erro ao salvar avaliação" });
+  }
+});
+
+/**
+ * GET /projetos/:id/avaliacoes - Buscar avaliações do projeto
+ */
+router.get("/:id/avaliacoes", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const avaliacoes = await Avaliacao.find({ projetoId: id });
+    
+    // Buscar dados dos professores
+    const professorIds = [...new Set(avaliacoes.map(av => av.professorId))];
+    const professores = await User.find(
+      { id: { $in: professorIds } },
+      "id name email"
+    );
+    
+    const professorMap = {};
+    professores.forEach(prof => {
+      professorMap[prof.id] = prof;
+    });
+    
+    const result = avaliacoes.map(av => ({
+      id: av._id,
+      projetoId: av.projetoId,
+      professorNome: professorMap[av.professorId]?.name || "Professor",
+      professorEmail: professorMap[av.professorId]?.email,
+      nota: av.nota,
+      comentario: av.comentario,
+      dataCriacao: av.createdAt
+    }));
+    
+    res.json(result);
+  } catch (error) {
+    console.error("Erro ao buscar avaliações:", error);
+    res.status(500).json({ error: "Erro ao buscar avaliações" });
+  }
+});
+
+/**
+ * GET /projetos/:id/avaliadores-notas - Buscar avaliadores com suas notas
+ */
+router.get("/:id/avaliadores-notas", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar todos os avaliadores do projeto
+    const avaliadoresRelacoes = await ProjetoAvaliador.find({ projetoId: id });
+    const professorIds = avaliadoresRelacoes.map(rel => rel.professorId);
+    
+    // Buscar dados dos professores
+    const professores = await User.find(
+      { id: { $in: professorIds } },
+      "id name email"
+    );
+    
+    // Buscar avaliações
+    const avaliacoes = await Avaliacao.find({ projetoId: id });
+    
+    // Criar mapa de avaliações
+    const avaliacoesMap = {};
+    avaliacoes.forEach(av => {
+      avaliacoesMap[av.professorId] = av;
+    });
+    
+    // Combinar os dados
+    const resultado = professores.map(prof => {
+      const avaliacao = avaliacoesMap[prof.id];
+      return {
+        id: prof.id,
+        nome: prof.name,
+        email: prof.email,
+        nota: avaliacao?.nota || null,
+        comentario: avaliacao?.comentario || null,
+        dataCriacao: avaliacao?.createdAt || null
+      };
+    });
+    
+    res.json(resultado);
+  } catch (error) {
+    console.error("Erro ao buscar avaliadores e notas:", error);
+    res.status(500).json({ error: "Erro ao buscar avaliadores e notas" });
+  }
+});
+// GET /projetos/:id/feedbacks-completos - Buscar feedbacks com nome do professor
+router.get("/:id/feedbacks-completos", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar o projeto para pegar o feedback do orientador
+    const project = await Project.findOne({ id });
+    
+    const feedbacks = [];
+    
+    // Adicionar feedback do orientador (se existir)
+    if (project && project.professorFeedback) {
+      feedbacks.push({
+        tipo: "orientador",
+        professorNome: project.professorNome || "Professor Orientador",
+        professorEmail: project.professorEmail,
+        feedback: project.professorFeedback,
+        data: project.professorFeedbackEm,
+      });
+    }
+    
+    // Buscar feedbacks das avaliações
+    const avaliacoes = await Avaliacao.find({ projetoId: id })
+      .populate('professorId', 'name email');
+    
+    for (const av of avaliacoes) {
+      if (av.comentario && av.comentario.trim() !== "") {
+        feedbacks.push({
+          tipo: "avaliador",
+          professorNome: av.professorId?.name || "Professor",
+          professorEmail: av.professorId?.email,
+          feedback: av.comentario,
+          nota: av.nota,
+          data: av.createdAt,
+        });
+      }
+    }
+    
+    res.json(feedbacks);
+  } catch (error) {
+    console.error("Erro ao buscar feedbacks:", error);
+    res.status(500).json({ error: "Erro ao buscar feedbacks" });
+  }
+});
+
 export default router;

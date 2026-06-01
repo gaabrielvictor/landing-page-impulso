@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import impulsoImage from "../assets/logo.png";
+import impulsoImage from "../assets/logo-branca.png";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "../styles/Login.css";
 import { findUserByEmailAndPassword } from "../utils/api";
